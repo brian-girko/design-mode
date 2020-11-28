@@ -7,7 +7,7 @@ const notify = e => chrome.notifications.create({
   message: e.message || e
 });
 
-chrome.browserAction.onClicked.addListener(() => chrome.tabs.executeScript({
+const onCommand = tab => chrome.tabs.executeScript({
   runAt: 'document_start',
   code: `document.designMode`
 }, arr => {
@@ -22,6 +22,7 @@ chrome.browserAction.onClicked.addListener(() => chrome.tabs.executeScript({
     code: `document.designMode = '${mode}';`
   });
   chrome.browserAction.setIcon({
+    tabId: tab.id,
     path: {
       '16': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '16.png',
       '19': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '19.png',
@@ -32,6 +33,46 @@ chrome.browserAction.onClicked.addListener(() => chrome.tabs.executeScript({
     }
   });
   if (mode === 'on') {
-    notify('Document is now editable!');
+    chrome.tabs.executeScript({
+      file: 'data/toolbar/inject.js'
+    });
   }
-}));
+  else {
+    chrome.tabs.sendMessage(tab.id, {
+      method: 'unload'
+    });
+  }
+});
+chrome.browserAction.onClicked.addListener(onCommand);
+chrome.runtime.onMessage.addListener((request, sender) => {
+  if (request.method === 'close-me') {
+    onCommand(sender.tab);
+  }
+});
+
+/* FAQs & Feedback */
+{
+  const {management, runtime: {onInstalled, setUninstallURL, getManifest}, storage, tabs} = chrome;
+  if (navigator.webdriver !== true) {
+    const page = getManifest().homepage_url;
+    const {name, version} = getManifest();
+    onInstalled.addListener(({reason, previousVersion}) => {
+      management.getSelf(({installType}) => installType === 'normal' && storage.local.get({
+        'faqs': true,
+        'last-update': 0
+      }, prefs => {
+        if (reason === 'install' || (prefs.faqs && reason === 'update')) {
+          const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
+          if (doUpdate && previousVersion !== version) {
+            tabs.create({
+              url: page + '?version=' + version + (previousVersion ? '&p=' + previousVersion : '') + '&type=' + reason,
+              active: reason === 'install'
+            });
+            storage.local.set({'last-update': Date.now()});
+          }
+        }
+      }));
+    });
+    setUninstallURL(page + '?rd=feedback&name=' + encodeURIComponent(name) + '&version=' + version);
+  }
+}
