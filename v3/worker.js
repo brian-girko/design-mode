@@ -7,43 +7,54 @@ const notify = e => chrome.notifications.create({
   message: e.message || e
 });
 
-const onCommand = tab => chrome.tabs.executeScript({
-  runAt: 'document_start',
-  code: `document.designMode`
-}, arr => {
-  const lastError = chrome.runtime.lastError;
-  if (lastError) {
-    return notify(lastError);
-  }
-  const mode = arr[0] === 'off' ? 'on' : 'off';
-  chrome.tabs.executeScript({
-    allFrames: true,
-    runAt: 'document_start',
-    code: `document.designMode = '${mode}';`
-  });
-  chrome.browserAction.setIcon({
-    tabId: tab.id,
-    path: {
-      '16': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '16.png',
-      '19': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '19.png',
-      '32': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '32.png',
-      '38': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '38.png',
-      '48': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '48.png',
-      '64': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '64.png'
+const onCommand = async tab => {
+  try {
+    const r = await chrome.scripting.executeScript({
+      target: {
+        tabId: tab.id
+      },
+      func: () => document.designMode
+    });
+    const mode = r[0].result === 'off' ? 'on' : 'off';
+
+    chrome.scripting.executeScript({
+      target: {
+        tabId: tab.id,
+        allFrames: true
+      },
+      func: mode => {
+        document.designMode = mode;
+      },
+      args: [mode]
+    });
+    chrome.action.setIcon({
+      tabId: tab.id,
+      path: {
+        '16': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '16.png',
+        '32': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '32.png',
+        '48': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '48.png'
+      }
+    });
+    if (mode === 'on') {
+      chrome.scripting.executeScript({
+        target: {
+          tabId: tab.id
+        },
+        files: ['data/toolbar/inject.js']
+      });
     }
-  });
-  if (mode === 'on') {
-    chrome.tabs.executeScript({
-      file: 'data/toolbar/inject.js'
-    });
+    else {
+      chrome.tabs.sendMessage(tab.id, {
+        method: 'unload'
+      });
+    }
   }
-  else {
-    chrome.tabs.sendMessage(tab.id, {
-      method: 'unload'
-    });
+  catch (e) {
+    console.warn(e);
+    notify(e);
   }
-});
-chrome.browserAction.onClicked.addListener(onCommand);
+};
+chrome.action.onClicked.addListener(onCommand);
 chrome.runtime.onMessage.addListener((request, sender) => {
   if (request.method === 'close-me') {
     onCommand(sender.tab);
@@ -64,10 +75,11 @@ chrome.runtime.onMessage.addListener((request, sender) => {
         if (reason === 'install' || (prefs.faqs && reason === 'update')) {
           const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
           if (doUpdate && previousVersion !== version) {
-            tabs.create({
+            tabs.query({active: true, currentWindow: true}, tbs => tabs.create({
               url: page + '?version=' + version + (previousVersion ? '&p=' + previousVersion : '') + '&type=' + reason,
-              active: reason === 'install'
-            });
+              active: reason === 'install',
+              ...(tbs && tbs.length && {index: tbs[0].index + 1})
+            }));
             storage.local.set({'last-update': Date.now()});
           }
         }

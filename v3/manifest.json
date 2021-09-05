@@ -1,25 +1,22 @@
 {
-  "manifest_version": 2,
-  "version": "0.1.2",
+  "manifest_version": 3,
+  "version": "0.2.0",
   "name": "Design Mode - Page's Rich Text Editor",
-  "description": "Change any webpage into its design mode (edit mode) where you can modify the content and drag images around like a Word Editor",
+  "description": "__MSG_description__",
+  "default_locale": "en",
   "permissions": [
     "storage",
     "notifications",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "background": {
-    "persistent": false,
-    "scripts": [
-      "background.js"
-    ]
+    "service_worker": "worker.js"
   },
   "homepage_url": "https://add0n.com/design-mode.html",
   "icons": {
     "16": "data/icons/16.png",
-    "19": "data/icons/19.png",
     "32": "data/icons/32.png",
-    "38": "data/icons/38.png",
     "48": "data/icons/48.png",
     "64": "data/icons/64.png",
     "128": "data/icons/128.png",
@@ -27,8 +24,16 @@
     "512": "data/icons/512.png"
   },
   "offline_enabled": true,
-  "browser_action": {},
-  "web_accessible_resources": [
-    "data/toolbar/index.html"
-  ]
+  "action": {},
+  "web_accessible_resources": [{
+    "resources": [
+      "data/toolbar/index.html"
+    ],
+    "matches": ["*://*/*"]
+  }],
+  "commands": {
+    "_execute_action": {
+      "description": "Press the action button"
+    }
+  }
 }
