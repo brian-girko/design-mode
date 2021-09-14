@@ -4,7 +4,19 @@
 {
   const iframe = document.createElement('iframe');
 
+  const click = e => e.stopPropagation();
+  const press = e => e.stopPropagation();
+
+  document.addEventListener('click', click, true);
+  document.addEventListener('keypress', press, true);
+  document.addEventListener('keydown', press, true);
+  document.addEventListener('keyup', press, true);
+
   const unload = (report = true) => {
+    document.removeEventListener('click', click, true);
+    document.removeEventListener('keypress', press, true);
+    document.removeEventListener('keydown', press, true);
+    document.removeEventListener('keyup', press, true);
     window.onmessage = '';
     iframe.remove();
     chrome.runtime.onMessage.removeListener(onmessage);
@@ -14,6 +26,7 @@
       });
     }
   };
+
 
   window.onmessage = e => {
     const command = e.data.method;
