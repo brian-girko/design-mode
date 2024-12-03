@@ -104,6 +104,7 @@
   iframe.src = chrome.runtime.getURL('/data/toolbar/index.html');
   iframe.classList.add('edit-toolbar');
   iframe.style = `
+    color-scheme: light;
     z-index: 1000000000000;
     position: fixed;
     top: 10px;

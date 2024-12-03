@@ -5,7 +5,7 @@ const notify = e => chrome.notifications.create({
   iconUrl: '/data/icons/48.png',
   title: chrome.runtime.getManifest().name,
   message: e.message || e
-});
+}, id => setTimeout(chrome.notifications.clear, 5000, id));
 
 const onCommand = async tab => {
   try {
@@ -15,6 +15,11 @@ const onCommand = async tab => {
       },
       func: () => document.designMode
     });
+    // Firefox's protected page
+    if (r.length === 0 || r[0] === undefined) {
+      throw Error('Cannot edit this page');
+    }
+
     const mode = r[0].result === 'off' ? 'on' : 'off';
 
     chrome.scripting.executeScript({
@@ -30,9 +35,9 @@ const onCommand = async tab => {
     chrome.action.setIcon({
       tabId: tab.id,
       path: {
-        '16': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '16.png',
-        '32': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '32.png',
-        '48': 'data/icons/' + (mode === 'on' ? 'active/' : '') + '48.png'
+        '16': '/data/icons/' + (mode === 'on' ? 'active/' : '') + '16.png',
+        '32': '/data/icons/' + (mode === 'on' ? 'active/' : '') + '32.png',
+        '48': '/data/icons/' + (mode === 'on' ? 'active/' : '') + '48.png'
       }
     });
     if (mode === 'on') {
@@ -40,13 +45,13 @@ const onCommand = async tab => {
         target: {
           tabId: tab.id
         },
-        files: ['data/toolbar/inject.js']
+        files: ['/data/toolbar/inject.js']
       });
     }
     else {
       chrome.tabs.sendMessage(tab.id, {
         method: 'unload'
-      });
+      }).catch(() => {});
     }
   }
   catch (e) {
@@ -65,8 +70,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
 {
   const {management, runtime: {onInstalled, setUninstallURL, getManifest}, storage, tabs} = chrome;
   if (navigator.webdriver !== true) {
-    const page = getManifest().homepage_url;
-    const {name, version} = getManifest();
+    const {homepage_url: page, name, version} = getManifest();
     onInstalled.addListener(({reason, previousVersion}) => {
       management.getSelf(({installType}) => installType === 'normal' && storage.local.get({
         'faqs': true,
@@ -75,7 +79,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
         if (reason === 'install' || (prefs.faqs && reason === 'update')) {
           const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
           if (doUpdate && previousVersion !== version) {
-            tabs.query({active: true, currentWindow: true}, tbs => tabs.create({
+            tabs.query({active: true, lastFocusedWindow: true}, tbs => tabs.create({
               url: page + '?version=' + version + (previousVersion ? '&p=' + previousVersion : '') + '&type=' + reason,
               active: reason === 'install',
               ...(tbs && tbs.length && {index: tbs[0].index + 1})

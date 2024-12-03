@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "0.2.0",
+  "version": "0.2.2",
   "name": "Design Mode - Page's Rich Text Editor",
   "description": "__MSG_description__",
   "default_locale": "en",
@@ -11,29 +11,34 @@
     "scripting"
   ],
   "background": {
-    "service_worker": "worker.js"
+    "service_worker": "worker.js",
+    "scripts": ["worker.js"]
   },
   "homepage_url": "https://add0n.com/design-mode.html",
   "icons": {
-    "16": "data/icons/16.png",
-    "32": "data/icons/32.png",
-    "48": "data/icons/48.png",
-    "64": "data/icons/64.png",
-    "128": "data/icons/128.png",
-    "256": "data/icons/256.png",
-    "512": "data/icons/512.png"
+    "16": "/data/icons/16.png",
+    "32": "/data/icons/32.png",
+    "48": "/data/icons/48.png",
+    "64": "/data/icons/64.png",
+    "128": "/data/icons/128.png",
+    "256": "/data/icons/256.png",
+    "512": "/data/icons/512.png"
   },
   "offline_enabled": true,
   "action": {},
   "web_accessible_resources": [{
     "resources": [
-      "data/toolbar/index.html"
+      "/data/toolbar/index.html"
     ],
     "matches": ["*://*/*"]
   }],
   "commands": {
-    "_execute_action": {
-      "description": "Press the action button"
+    "_execute_action": {}
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{aaf4a359-9bc2-4292-900d-93ff2b71e5cf}",
+      "strict_min_version": "128.0"
     }
   }
 }
