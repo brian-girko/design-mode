@@ -95,13 +95,19 @@
       iframe.style.top = (parseInt(iframe.style.top) + e.data.data.dy) + 'px';
       stop();
     }
+    else if (command === 'spellcheck:false') {
+      document.documentElement.spellcheck = false;
+    }
+    else if (command === 'spellcheck:true') {
+      document.documentElement.spellcheck = true;
+    }
     else if (command === 'close') {
       unload();
       stop();
     }
   };
 
-  iframe.src = chrome.runtime.getURL('/data/toolbar/index.html');
+  iframe.src = chrome.runtime.getURL('/data/toolbar/index.html?spellcheck=' + document.documentElement.spellcheck);
   iframe.classList.add('edit-toolbar');
   iframe.style = `
     color-scheme: light;

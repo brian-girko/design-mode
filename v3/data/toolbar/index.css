@@ -44,3 +44,6 @@ select {
 #move * {
   pointer-events: none;
 }
+svg[data-command="spellcheck"].active {
+  fill: blue;
+}
