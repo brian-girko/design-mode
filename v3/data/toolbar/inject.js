@@ -70,20 +70,13 @@
 
       stop();
     }
-    else if (command === 'heading-0') {
-      document.execCommand('formatBlock', false, 'p');
+    else if (['p', 'pre', 'div'].includes(command)) {
+      console.log(command);
+      document.execCommand('formatBlock', false, command);
       stop();
     }
-    else if (command === 'heading-1') {
-      document.execCommand('formatBlock', false, 'h1');
-      stop();
-    }
-    else if (command === 'heading-2') {
-      document.execCommand('formatBlock', false, 'h2');
-      stop();
-    }
-    else if (command === 'heading-3') {
-      document.execCommand('formatBlock', false, 'h3');
+    else if (/h\d/.test(command)) {
+      document.execCommand('formatBlock', false, command);
       stop();
     }
     else if (command === 'blockquote') {

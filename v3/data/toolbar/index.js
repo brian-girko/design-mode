@@ -19,7 +19,7 @@ document.addEventListener('click', e => {
     post(command);
   }
 });
-document.getElementById('heading').onchange = e => post('heading-' + e.target.value);
+document.getElementById('heading').onchange = e => post(e.target.value);
 
 // move
 document.getElementById('move').onmousedown = () => {
