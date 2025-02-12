@@ -41,11 +41,18 @@ const onCommand = async tab => {
       }
     });
     if (mode === 'on') {
-      chrome.scripting.executeScript({
+      await chrome.scripting.executeScript({
         target: {
           tabId: tab.id
         },
-        files: ['/data/toolbar/inject.js']
+        files: ['/data/toolbar/inject/main.js'],
+        world: 'MAIN'
+      });
+      await chrome.scripting.executeScript({
+        target: {
+          tabId: tab.id
+        },
+        files: ['/data/toolbar/inject/isolated.js']
       });
     }
     else {
