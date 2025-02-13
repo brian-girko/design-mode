@@ -15,6 +15,7 @@
     height: 38px;
     border: none;
   `;
+  p.classList.add('edit-toolbar');
 
   const click = e => e.stopPropagation();
   const press = e => e.stopPropagation();
@@ -83,7 +84,6 @@
       stop();
     }
     else if (['p', 'pre', 'div'].includes(command)) {
-      console.log(command);
       document.execCommand('formatBlock', false, command);
       stop();
     }
@@ -114,7 +114,6 @@
     }
   };
 
-  console.log(p.gg, 'gg' in p);
   p.setAttribute(
     'src',
     chrome.runtime.getURL('/data/toolbar/index.html?spellcheck=' + document.documentElement.spellcheck)
